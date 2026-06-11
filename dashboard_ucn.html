@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard Seleccionados UCN 2021–2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#e8eef4;color:#222;font-size:13px}
+.topbar{background:#fff;border-bottom:3px solid #1a3a6e;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{width:40px;height:40px;border-radius:50%;background:#1a3a6e;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0}
+.logo-txt{font-size:12px;font-weight:700;color:#1a3a6e;line-height:1.3}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.filters label{font-size:11px;color:#555;font-weight:600}
+select{border:1.5px solid #1a3a6e;border-radius:6px;padding:5px 10px;font-size:11px;color:#1a3a6e;background:#fff;cursor:pointer;outline:none}
+.tabs{display:flex;gap:0;padding:0 20px;background:#fff;border-bottom:1px solid #dde3ec;overflow-x:auto}
+.tab{padding:8px 16px;font-size:11px;font-weight:700;color:#888;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s;text-transform:uppercase;letter-spacing:.3px}
+.tab:hover{color:#1a3a6e}.tab.active{color:#1a3a6e;border-bottom-color:#1a3a6e}
+.panel{display:none;padding:14px 20px}.panel.active{display:block}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:10px;padding:12px 14px;border-left:4px solid #1a3a6e}
+.kpi-val{font-size:22px;font-weight:700;color:#1a3a6e;line-height:1}
+.kpi-lbl{font-size:10px;color:#888;margin-top:3px}
+.kpi-sub{font-size:10px;color:#555;margin-top:2px;font-weight:600}
+.g2{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:12px}
+.g2b{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.card{background:#fff;border-radius:10px;padding:12px 14px;border:0.5px solid #dde3ec}
+.ct{font-size:10px;font-weight:700;color:#1a3a6e;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px}
+/* barras */
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.blbl{font-size:10px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.btrk{flex:1;height:14px;background:#eef0f5;border-radius:3px;overflow:hidden}
+.bfil{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:3px;transition:width .4s}
+.bnum{font-size:8px;color:#fff;font-weight:700}
+.bn{font-size:9px;color:#888;min-width:36px;text-align:right;flex-shrink:0}
+/* comparación */
+.comp-header{display:grid;grid-template-columns:160px 1fr 1fr 1fr;gap:0;margin-bottom:8px}
+.comp-col{text-align:center;padding:6px 4px;border-radius:6px;font-size:10px;font-weight:700}
+.comp-row{display:grid;grid-template-columns:160px 1fr 1fr 1fr;gap:0;margin-bottom:4px;align-items:center}
+.comp-lbl{font-size:10px;color:#555;padding:4px 0}
+.comp-val{text-align:center;padding:4px;font-size:11px;font-weight:600;color:#1a3a6e}
+.comp-bar-cell{padding:3px 6px}
+.mini-bar-wrap{height:12px;background:#eef0f5;border-radius:2px;overflow:hidden}
+.mini-bar{height:100%;border-radius:2px;transition:width .4s}
+/* split bar */
+.split-yr{margin-bottom:6px}
+.split-lbl{font-size:10px;color:#555;margin-bottom:2px;font-weight:600}
+.split-track{height:20px;background:#f0f2f5;border-radius:3px;overflow:hidden;display:flex}
+.s-cupo{background:#1a3a6e;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:700}
+.s-irp{background:#4a9fd4;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:700}
+.s-otro{background:#c0dff0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#555;font-weight:700}
+.legend-row{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:3px;font-size:9px;color:#666}
+.ldot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+/* prog tabs */
+.ptabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.ptab{background:#f0f2f5;border:1.5px solid #dde3ec;color:#555;border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s}
+.ptab.active,.ptab:hover{background:#1a3a6e;color:#fff;border-color:#1a3a6e}
+.stat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:.5px solid #eee;font-size:11px}
+.stat-row:last-child{border-bottom:none}
+.sl{color:#888}.sv{font-weight:700;color:#1a3a6e}
+.nota{font-size:9px;color:#aaa;font-style:italic;margin-top:6px}
+footer{text-align:center;font-size:10px;color:#aaa;padding:10px;margin-top:4px}
+@media(max-width:700px){.kpi-row,.g2,.g2b,.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">U</div>
+  <div class="logo-txt">Universidad Católica del Norte<br><span style="font-weight:400;font-size:10px;color:#888">Dashboard Seleccionados 2021–2026</span></div>
+  <div class="filters">
+    <label>Año</label>
+    <select id="sel-year" onchange="renderAll()">
+      <option value="2026">2026</option><option value="2025">2025</option>
+      <option value="2024">2024</option><option value="2023">2023</option>
+      <option value="2022">2022</option><option value="2021">2021</option>
+    </select>
+    <label>Sede</label>
+    <select id="sel-sede" onchange="renderAll()">
+      <option value="Todas">Todas</option>
+      <option value="Antofagasta">Antofagasta</option>
+      <option value="Coquimbo">Coquimbo</option>
+    </select>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active"  onclick="showTab('resumen',this)">Resumen general</div>
+  <div class="tab" onclick="showTab('comparacion',this)">IRP vs PACE — comparación</div>
+  <div class="tab" onclick="showTab('programas',this)">Programas especiales</div>
+  <div class="tab" onclick="showTab('facultades',this)">Facultades</div>
+  <div class="tab" onclick="showTab('tendencia',this)">Tendencia 2021–2026</div>
+</div>
+
+<!-- TAB 1: RESUMEN -->
+<div id="tab-resumen" class="panel active">
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-val" id="k-total">—</div><div class="kpi-lbl">Total seleccionados</div><div class="kpi-sub" id="k-yr">—</div></div>
+    <div class="kpi" style="border-left-color:#2a7ab8"><div class="kpi-val" id="k-irp">—</div><div class="kpi-lbl">Ingreso regular IRP</div><div class="kpi-sub" id="k-irp-p">—</div></div>
+    <div class="kpi" style="border-left-color:#e07848"><div class="kpi-val" id="k-iep">—</div><div class="kpi-lbl">Programas especiales IEP</div><div class="kpi-sub" id="k-iep-p">—</div></div>
+    <div class="kpi" style="border-left-color:#3b6d11"><div class="kpi-val" id="k-pgen">—</div><div class="kpi-lbl">1ª generación universitaria</div><div class="kpi-sub">Ningún padre con título univ.</div></div>
+    <div class="kpi" style="border-left-color:#7f77dd"><div class="kpi-val" id="k-pace">—</div><div class="kpi-lbl">Estudiantes con PACE</div><div class="kpi-sub" id="k-pace-sub">—</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">N° seleccionados por tipo de ingreso</div>
+      <div id="tipo-bars"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Por sede</div>
+      <div style="height:120px;position:relative"><canvas id="c-sede"></canvas></div>
+      <div class="ct" style="margin-top:12px">Ingreso bruto familiar</div>
+      <div id="ing-bars"></div>
+    </div>
+  </div>
+  <div class="g2b">
+    <div class="card">
+      <div class="ct">Puntaje PAES promedio por grupo</div>
+      <div style="height:180px;position:relative"><canvas id="c-scores-resumen"></canvas></div>
+      <div class="nota">* Solo puntajes entre 100–1000 (excluye escalas distintas)</div>
+    </div>
+    <div class="card">
+      <div class="ct">Financiamiento de estudios</div>
+      <div id="financia-bars"></div>
+      <div class="ct" style="margin-top:10px">Sexo registrado</div>
+      <div style="height:100px;position:relative"><canvas id="c-sexo"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: COMPARACIÓN IRP vs PACE -->
+<div id="tab-comparacion" class="panel">
+  <div style="background:#E6F1FB;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#0C447C">
+    <strong>Tres grupos comparados:</strong>
+    <span style="display:inline-block;background:#1a3a6e;color:#fff;border-radius:4px;padding:1px 7px;margin:0 3px">IRP sin PACE</span> estudiantes que entraron por puntaje y no pertenecen al programa PACE ·
+    <span style="display:inline-block;background:#4a9fd4;color:#fff;border-radius:4px;padding:1px 7px;margin:0 3px">PACE vía IRP</span> pertenecen a PACE pero su puntaje les alcanzó para entrar en lista regular ·
+    <span style="display:inline-block;background:#e07848;color:#fff;border-radius:4px;padding:1px 7px;margin:0 3px">PACE con cupo</span> usaron el cupo especial PACE para ingresar
+  </div>
+
+  <div class="g3">
+    <div class="card">
+      <div class="ct">Puntajes PAES promedio</div>
+      <div style="height:200px;position:relative"><canvas id="c-comp-scores"></canvas></div>
+      <div class="nota">* Puntajes en escala 100–1000</div>
+    </div>
+    <div class="card">
+      <div class="ct">Ingreso bruto familiar</div>
+      <div style="height:200px;position:relative"><canvas id="c-comp-ingreso"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Financiamiento estudios</div>
+      <div style="height:200px;position:relative"><canvas id="c-comp-financia"></canvas></div>
+    </div>
+  </div>
+
+  <div class="g3">
+    <div class="card">
+      <div class="ct">Diagnóstico de nivelación — matemática</div>
+      <div style="height:160px;position:relative"><canvas id="c-comp-nivmat"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Diagnóstico de nivelación — lenguaje</div>
+      <div style="height:160px;position:relative"><canvas id="c-comp-nivlen"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Calidad de internet</div>
+      <div style="height:160px;position:relative"><canvas id="c-comp-internet"></canvas></div>
+    </div>
+  </div>
+
+  <div class="g2b">
+    <div class="card">
+      <div class="ct">Tabla comparativa resumen</div>
+      <div id="tabla-comp"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Educación del padre — distribución</div>
+      <div style="height:220px;position:relative"><canvas id="c-comp-edu"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: PROGRAMAS -->
+<div id="tab-programas" class="panel">
+  <div class="ptabs" id="prog-tabs"></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="ct">¿Cómo ingresaron? — todos los años</div>
+    <div id="split-bars-prog"></div>
+    <div class="legend-row">
+      <div class="leg"><div class="ldot" style="background:#1a3a6e"></div>Usó cupo del programa</div>
+      <div class="leg"><div class="ldot" style="background:#4a9fd4"></div>Entró por IRP</div>
+      <div class="leg"><div class="ldot" style="background:#c0dff0"></div>Otro</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="ct">Evolución total en programa 2021–2026</div>
+    <div style="height:280px;position:relative"><canvas id="c-prog-trend"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="ct">Estadísticas año seleccionado</div>
+    <div id="prog-stats-detail"></div>
+  </div>
+</div>
+
+<!-- TAB 4: FACULTADES -->
+<div id="tab-facultades" class="panel">
+  <div class="card" style="margin-bottom:12px">
+    <div class="ct">Todas las facultades — N° seleccionados</div>
+    <div id="fac-bars-all"></div>
+  </div>
+  <div class="card">
+    <div class="ct">Evolución top 5 facultades 2021–2026</div>
+    <div style="height:340px;position:relative"><canvas id="c-fac-trend"></canvas></div>
+  </div>
+</div>
+
+<!-- TAB 5: TENDENCIA -->
+<div id="tab-tendencia" class="panel">
+  <div class="card" style="margin-bottom:12px">
+    <div class="ct">Total seleccionados 2021–2026</div>
+    <div style="height:260px;position:relative"><canvas id="c-t-total"></canvas></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="ct">IRP vs IEP por año</div>
+    <div style="height:260px;position:relative"><canvas id="c-t-tipo"></canvas></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="ct">Evolución PACE — total, cupo e IRP</div>
+    <div style="height:260px;position:relative"><canvas id="c-t-pace"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="ct">% Primera generación universitaria por año</div>
+    <div style="height:260px;position:relative"><canvas id="c-t-pgen"></canvas></div>
+  </div>
+</div>
+
+<footer>Universidad Católica del Norte · Datos 2021–2026 · Puntajes filtrados escala 100–1000</footer>
+
+<script>
+const DATA = {"2021": {"total": 1561, "irp": 1451, "iep": 107, "pgen": 61.9, "programas": {"PACE": {"total": 158, "uso_cupo": 33, "entro_irp": 120, "otro": 5}, "Propedéutico": {"total": 36, "uso_cupo": 0, "entro_irp": 28, "otro": 8}, "Enlace Escolar": {"total": 22, "uso_cupo": 0, "entro_irp": 22, "otro": 0}, "Incluye UCN": {"total": 48, "uso_cupo": 0, "entro_irp": 42, "otro": 6}, "Etnia Declarada": {"total": 245, "uso_cupo": 0, "entro_irp": 234, "otro": 11}}, "tipo_counts": {"IRP-Lista de seleccion": 1341, "IRP-Lista de espera": 66, "IRP-Repostulacion": 39, "IEP-Ingreso Especial Teologico": 38, "IEP-Ingreso Cupo PACE": 32, "IEP-Ingreso Cupo Especial BEA": 10, "IEP-Ingreso Traslado de Univ": 10, "IEP-Propedeutico": 6, "IRP-Oficio Verif. Excep. DEMRE": 5, "IEP-Ley 20.903": 4, "IEP-Ingreso Extranjero": 3, "IEP-Ingr. Tecnico Profesional": 2, "Repostulacion PACE": 2, "IEP-Ingreso Deportista": 1, "Ingreso Especial Discapacidad": 1, "IEP-Ingreso Profesional": 1}, "facultad": {"Fac. de Ing. y Cs. Geologicas": 333, "Escuela de Ingenieria": 187, "Facultad de Medicina": 170, "Escuela de Cs. Empresariales": 159, "Facultad de Economia y Adminis": 139, "Facultad de Ciencias Juridicas": 90, "Facultad de Ciencias": 89, "Esc. de Derecho Antofagasta": 87, "Facultad de Educacion": 86, "Escuela de Psicologia": 52, "Escuela de Arquitectura": 51, "Facultad de Ciencias del Mar": 45, "Fac. de Cs. de Ing. y Construc": 43, "Escuela de Periodismo": 27, "Dpto. Teología Coquimbo": 3}, "sede": {"Antofagasta": 907, "Coquimbo": 654}, "ingreso": {"$288K–$864K": 573, "Menor a $288K": 413, "Más de $1.4M": 224, "$864K–$1.4M": 224}, "sexo": {"Masculino": 791, "Femenino": 770}, "grupo_irp_puro": {"n": 1331, "pgen": 57.0, "nem": 655.9, "mat": 581.8, "len": 566.0, "cie": 557.0, "edad": 18.5, "ingreso_fam": {"$288K–$864K": 492, "Menor a $288K": 344, "Más de $1.4M": 219, "$864K–$1.4M": 214}, "edu_padre": {"Ed. Media Completa": 323, "Ed. Universitaria Completa": 284, "Ed. Técnica Completa": 228, "No lo sé": 134, "Ed. Media Incompleta": 82, "Ed. Universitaria Incompleta": 79, "Postgrado (master, doctor o equivalente)": 56, "Ed. Básica Completa": 40, "Ed. Técnica Incompleta": 33, "Ed. Básica Incompleta": 17, "Sin información": 4}, "internet": {}, "financia": {"Padres": 612, "Gratuidad": 448, "Crédito": 83, "Otros": 65, "Beca": 57, "Me autofinancio": 12, "Sin información": 3}, "niv_mat": {"Aprobado": 956, "Reprobado": 328}, "niv_len": {"Reprobado": 649, "Aprobado": 627}, "hijos": {"No": 1268, "Si": 12}, "trabaja": {"No": 1154, "Independiente": 43, "Part time": 37, "Freelance": 18, "Jornada Completa": 15, "Media Jornada": 12, "Sin información": 1}}, "grupo_pace_cupo": {"n": 34, "pgen": 88.2, "nem": 697.1, "mat": 433.8, "len": 446.5, "cie": 451.1, "edad": 18.2, "ingreso_fam": {"Menor a $288K": 13, "$288K–$864K": 13, "$864K–$1.4M": 2, "Más de $1.4M": 1}, "edu_padre": {"Ed. Media Completa": 11, "Ed. Básica Completa": 5, "No lo sé": 4, "Ed. Media Incompleta": 3, "Ed. Técnica Completa": 2, "Ed. Universitaria Completa": 2, "Ed. Básica Incompleta": 2, "Ed. Técnica Incompleta": 1}, "internet": {}, "financia": {"Gratuidad": 15, "Padres": 9, "Beca": 4, "Otros": 2}, "niv_mat": {"Reprobado": 18, "Aprobado": 12}, "niv_len": {"Reprobado": 22, "Aprobado": 7}, "hijos": {"No": 30}, "trabaja": {"No": 27, "Jornada Completa": 2, "Part time": 1}}, "grupo_pace_irp": {"n": 120, "pgen": 89.2, "nem": 739.6, "mat": 534.0, "len": 534.4, "cie": 510.5, "edad": 17.9, "ingreso_fam": {"$288K–$864K": 60, "Menor a $288K": 48, "$864K–$1.4M": 6, "Más de $1.4M": 3}, "edu_padre": {"Ed. Media Completa": 46, "No lo sé": 18, "Ed. Media Incompleta": 15, "Ed. Técnica Completa": 13, "Ed. Básica Incompleta": 7, "Ed. Básica Completa": 7, "Ed. Universitaria Completa": 5, "Ed. Técnica Incompleta": 5, "Ed. Universitaria Incompleta": 1, "Sin información": 1}, "internet": {}, "financia": {"Gratuidad": 79, "Padres": 30, "Beca": 4, "Crédito": 4, "Sin información": 1}, "niv_mat": {"Aprobado": 63, "Reprobado": 55}, "niv_len": {"Reprobado": 68, "Aprobado": 50}, "hijos": {"No": 118}, "trabaja": {"No": 99, "Part time": 6, "Independiente": 6, "Freelance": 3, "Media Jornada": 2, "Jornada Completa": 2}}, "grupo_pace_todo": {"n": 158, "pgen": 89.2, "nem": 729.5, "mat": 511.5, "len": 515.9, "cie": 496.9, "edad": 18.0, "ingreso_fam": {"$288K–$864K": 75, "Menor a $288K": 64, "$864K–$1.4M": 8, "Más de $1.4M": 4}, "edu_padre": {"Ed. Media Completa": 58, "No lo sé": 23, "Ed. Media Incompleta": 18, "Ed. Técnica Completa": 17, "Ed. Básica Completa": 13, "Ed. Básica Incompleta": 9, "Ed. Universitaria Completa": 7, "Ed. Técnica Incompleta": 6, "Ed. Universitaria Incompleta": 1, "Sin información": 1}, "internet": {}, "financia": {"Gratuidad": 99, "Padres": 39, "Beca": 8, "Crédito": 4, "Otros": 2, "Sin información": 1}, "niv_mat": {"Aprobado": 78, "Reprobado": 75}, "niv_len": {"Reprobado": 93, "Aprobado": 59}, "hijos": {"No": 153}, "trabaja": {"No": 131, "Part time": 7, "Independiente": 6, "Jornada Completa": 4, "Freelance": 3, "Media Jornada": 2}}}, "2022": {"total": 1830, "irp": 1692, "iep": 137, "pgen": 62.7, "programas": {"PACE": {"total": 168, "uso_cupo": 31, "entro_irp": 129, "otro": 8}, "Propedéutico": {"total": 48, "uso_cupo": 0, "entro_irp": 35, "otro": 13}, "Enlace Escolar": {"total": 26, "uso_cupo": 0, "entro_irp": 23, "otro": 3}, "Incluye UCN": {"total": 86, "uso_cupo": 0, "entro_irp": 75, "otro": 11}, "Etnia Declarada": {"total": 260, "uso_cupo": 0, "entro_irp": 239, "otro": 21}}, "tipo_counts": {"IRP-Lista de seleccion": 1638, "IRP-Repostulacion": 37, "IEP-Ingreso Cupo PACE": 31, "IEP-Excepcion Lista espera Rep": 30, "IEP-Ingreso Traslado de Univ": 16, "IEP-Ingreso Cupo Especial BEA": 16, "IRP-Lista de espera": 15, "IEP-Propedeutico": 10, "IEP-Ingr. Tecnico Profesional": 10, "IEP-Habilitacion Pedagogia 50P": 4, "IEP-Inclusion": 4, "IEP-Habilitacion Pedagogia PAP": 4, "IEP-Ingreso Pueblos Originario": 3, "IEP-Ingreso Extranjero": 3, "IEP-Ingreso Profesional": 3, "IRP-Oficio de Verificacion": 2, "Repostulacion PACE": 1, "IEP-Ceduc": 1, "IEP-Ingreso Equidad de Genero": 1, "IEP-Definicion Vocacional": 1}, "facultad": {"Fac. de Ing. y Cs. Geologicas": 401, "Escuela de Ingenieria": 235, "Escuela de Cs. Empresariales": 180, "Facultad de Medicina": 164, "Facultad de Economia y Adminis": 152, "Esc. de Derecho Antofagasta": 110, "Facultad de Ciencias Juridicas": 107, "Facultad de Ciencias": 102, "Facultad de Educacion": 86, "Facultad de Ciencias del Mar": 68, "Escuela de Psicologia": 67, "Escuela de Arquitectura": 66, "Escuela de Educación Coquimbo": 35, "Fac. de Cs. de Ing. y Construc": 28, "Escuela de Periodismo": 23, "Dpto. Teología Coquimbo": 6}, "sede": {"Antofagasta": 1035, "Coquimbo": 795}, "ingreso": {"$288K–$864K": 738, "Menor a $288K": 392, "$864K–$1.4M": 288, "Más de $1.4M": 231}, "sexo": {"Masculino": 996, "Femenino": 834}, "grupo_irp_puro": {"n": 1563, "pgen": 59.4, "nem": 677.3, "mat": 568.2, "len": 561.7, "cie": 557.8, "edad": 18.6, "ingreso_fam": {"$288K–$864K": 624, "Menor a $288K": 304, "$864K–$1.4M": 270, "Más de $1.4M": 222}, "edu_padre": {"Ed. Media Completa": 383, "Ed. Universitaria Completa": 298, "Ed. Técnica Completa": 258, "No lo sé": 159, "Ed. Universitaria Incompleta": 77, "Postgrado (master, doctor o equivalente)": 73, "Ed. Media Incompleta": 57, "Ed. Básica completa": 40, "Ed. Técnica Incompleta": 38, "Ed. Básica Incompleta": 37}, "internet": {}, "financia": {"Padres": 743, "Gratuidad": 460, "Crédito": 73, "Otros": 71, "Beca": 54, "Me autofinancio": 19}, "niv_mat": {"Aprobado": 1016, "Reprobado": 458}, "niv_len": {"Aprobado": 739, "Reprobado": 713}, "hijos": {"No": 1405, "Si": 15}, "trabaja": {"No": 1179, "Part time": 102, "Independiente": 51, "Jornada completa": 42, "Freelance": 23, "Media jornada": 23}}, "grupo_pace_cupo": {"n": 32, "pgen": 87.5, "nem": 711.8, "mat": 430.1, "len": 445.2, "cie": 439.2, "edad": 18.0, "ingreso_fam": {"$288K–$864K": 16, "Menor a $288K": 14, "$864K–$1.4M": 1}, "edu_padre": {"Ed. Media Completa": 10, "Ed. Media Incompleta": 5, "Ed. Básica completa": 5, "Ed. Básica Incompleta": 3, "Ed. Universitaria Completa": 2, "Ed. Técnica Completa": 2, "No lo sé": 2, "Ed. Técnica Incompleta": 1, "Ed. Universitaria Incompleta": 1}, "internet": {}, "financia": {"Gratuidad": 16, "Padres": 8, "Otros": 5, "Beca": 2}, "niv_mat": {"Reprobado": 21, "Aprobado": 10}, "niv_len": {"Reprobado": 25, "Aprobado": 5}, "hijos": {"No": 31}, "trabaja": {"No": 28, "Jornada completa": 1, "Part time": 1, "Independiente": 1}}, "grupo_pace_irp": {"n": 129, "pgen": 82.9, "nem": 757.7, "mat": 533.1, "len": 536.6, "cie": 510.8, "edad": 17.9, "ingreso_fam": {"$288K–$864K": 62, "Menor a $288K": 47, "$864K–$1.4M": 10, "Más de $1.4M": 4}, "edu_padre": {"Ed. Media Completa": 38, "No lo sé": 19, "Ed. Técnica Completa": 16, "Ed. Media Incompleta": 15, "Ed. Universitaria Completa": 10, "Ed. Básica completa": 8, "Ed. Básica Incompleta": 6, "Ed. Universitaria Incompleta": 6, "Ed. Técnica Incompleta": 4, "Postgrado (master, doctor o equivalente)": 1}, "internet": {}, "financia": {"Gratuidad": 73, "Padres": 32, "Beca": 13, "Otros": 3, "Crédito": 2}, "niv_mat": {"Aprobado": 70, "Reprobado": 55}, "niv_len": {"Aprobado": 62, "Reprobado": 60}, "hijos": {"No": 121, "Si": 2}, "trabaja": {"No": 104, "Part time": 6, "Media jornada": 5, "Jornada completa": 5, "Independiente": 2, "Freelance": 1}}, "grupo_pace_todo": {"n": 168, "pgen": 82.7, "nem": 747.4, "mat": 512.9, "len": 520.6, "cie": 494.3, "edad": 17.9, "ingreso_fam": {"$288K–$864K": 83, "Menor a $288K": 62, "$864K–$1.4M": 11, "Más de $1.4M": 5}, "edu_padre": {"Ed. Media Completa": 51, "Ed. Media Incompleta": 21, "No lo sé": 21, "Ed. Técnica Completa": 19, "Ed. Básica completa": 13, "Ed. Universitaria Completa": 13, "Ed. Básica Incompleta": 9, "Ed. Universitaria Incompleta": 8, "Ed. Técnica Incompleta": 5, "Postgrado (master, doctor o equivalente)": 1}, "internet": {}, "financia": {"Gratuidad": 94, "Padres": 42, "Beca": 15, "Otros": 8, "Crédito": 2}, "niv_mat": {"Aprobado": 84, "Reprobado": 79}, "niv_len": {"Reprobado": 91, "Aprobado": 68}, "hijos": {"No": 159, "Si": 2}, "trabaja": {"No": 138, "Part time": 7, "Jornada completa": 7, "Media jornada": 5, "Independiente": 3, "Freelance": 1}}}, "2023": {"total": 2286, "irp": 2055, "iep": 222, "pgen": 66.7, "programas": {"PACE": {"total": 214, "uso_cupo": 41, "entro_irp": 164, "otro": 9}, "Propedéutico": {"total": 55, "uso_cupo": 0, "entro_irp": 39, "otro": 16}, "Enlace Escolar": {"total": 35, "uso_cupo": 0, "entro_irp": 34, "otro": 1}, "Incluye UCN": {"total": 171, "uso_cupo": 0, "entro_irp": 149, "otro": 22}, "Etnia Declarada": {"total": 414, "uso_cupo": 0, "entro_irp": 376, "otro": 38}}, "tipo_counts": {"IRP-Lista de seleccion": 2005, "IEP-Excepcion Lista espera Rep": 65, "IRP-Lista de espera": 41, "IEP-Ingreso Cupo PACE": 37, "IEP-Ingreso Traslado de Univ": 22, "IEP-Ingr. Tecnico Profesional": 17, "IEP-Propedeutico": 15, "IEP-Ingreso Cupo Especial BEA": 14, "IEP-Ingreso Equidad de Genero": 11, "IEP-Habilitacion Pedagogia 30%": 7, "IRP-Oficio de Verificacion": 6, "IEP-Ingreso Pueblos Originario": 6, "IEP-Habilitacion Pedagogia 50P": 5, "Ingreso Especial Discapacidad": 5, "IEP-Ingreso Deportista": 4, "Repostulacion PACE": 4, "IEP-Ingreso Profesional": 3, "IEP-Ceduc": 3, "IEP-Trayectoria Pastoral": 3, "IEP-Ingreso Extranjero": 3, "IEP-Inclusion": 2, "IRP-Repostulacion": 2, "IEP-Ley 20.903": 2, "IRP-Oficio Verif. Excep. DEMRE": 1, "IEP-Ingreso de Artista": 1, "IEP-Ingreso Puntaje Ranking": 1, "IEP-Definicion Vocacional": 1}, "facultad": {"Fac. de Ing. y Cs. Geologicas": 513, "Escuela de Ingenieria": 283, "Facultad de Economia y Adminis": 203, "Escuela de Cs. Empresariales": 188, "Facultad de Medicina": 182, "Facultad de Educacion": 146, "Facultad de Ciencias Juridicas": 127, "Esc. de Derecho Antofagasta": 119, "Facultad de Ciencias": 115, "Facultad de Ciencias del Mar": 90, "Escuela de Arquitectura": 82, "Escuela de Psicologia": 80, "Fac. de Cs. de Ing. y Construc": 71, "Escuela de Educación Coquimbo": 47, "Escuela de Periodismo": 34, "Dpto. Teología Coquimbo": 6}, "sede": {"Antofagasta": 1363, "Coquimbo": 923}, "ingreso": {"$288K–$864K": 841, "Menor a $288K": 465, "$864K–$1.4M": 344, "Más de $1.4M": 299}, "sexo": {"Masculino": 1188, "Femenino": 1098}, "grupo_irp_puro": {"n": 1891, "pgen": 63.2, "nem": 781.7, "mat": 617.5, "len": 706.2, "cie": 545.4, "edad": 18.6, "ingreso_fam": {"$288K–$864K": 703, "Menor a $288K": 378, "$864K–$1.4M": 313, "Más de $1.4M": 281}, "edu_padre": {"Ed. Media Completa": 469, "Ed. Universitaria Completa": 341, "Ed. Técnica Completa": 294, "No lo sé": 195, "Ed. Universitaria Incompleta": 102, "Ed. Media Incompleta": 80, "Postgrado (master, doctor o equivalente)": 73, "Ed. Básica completa": 53, "Ed. Técnica Incompleta": 43, "Ed. Básica Incompleta": 26, "0": 1}, "internet": {}, "financia": {"Padres": 842, "Gratuidad": 612, "Otros": 77, "Crédito": 73, "Beca": 58, "Me autofinancio": 14, "0": 1}, "niv_mat": {"Reprobado": 972, "Aprobado": 756}, "niv_len": {"Reprobado": 947, "Aprobado": 747}, "hijos": {"No": 1659, "Si": 18}, "trabaja": {"No": 1395, "Part time": 120, "Jornada completa": 55, "Independiente": 55, "Media jornada": 26, "Freelance": 25, "0": 1}}, "grupo_pace_cupo": {"n": 41, "pgen": 90.2, "nem": 821.8, "mat": 505.6, "len": 573.5, "cie": 452.8, "edad": 18.0, "ingreso_fam": {"Menor a $288K": 15, "$288K–$864K": 11, "$864K–$1.4M": 2}, "edu_padre": {"Ed. Media Completa": 6, "Ed. Técnica Completa": 5, "No lo sé": 5, "Ed. Media Incompleta": 4, "Ed. Básica completa": 3, "Ed. Básica Incompleta": 3, "Ed. Universitaria Completa": 2}, "internet": {}, "financia": {"Gratuidad": 20, "Padres": 6, "Beca": 1, "Otros": 1}, "niv_mat": {"Reprobado": 24, "Aprobado": 8}, "niv_len": {"Reprobado": 26, "Aprobado": 7}, "hijos": {"No": 28}, "trabaja": {"No": 24, "Freelance": 2, "Independiente": 1, "Media jornada": 1}}, "grupo_pace_irp": {"n": 164, "pgen": 77.4, "nem": 874.6, "mat": 583.3, "len": 679.9, "cie": 518.7, "edad": 18.0, "ingreso_fam": {"$288K–$864K": 90, "Menor a $288K": 43, "$864K–$1.4M": 17, "Más de $1.4M": 3}, "edu_padre": {"Ed. Media Completa": 52, "No lo sé": 35, "Ed. Técnica Completa": 15, "Ed. Universitaria Completa": 14, "Ed. Básica completa": 11, "Ed. Media Incompleta": 11, "Ed. Básica Incompleta": 8, "Ed. Universitaria Incompleta": 6, "Postgrado (master, doctor o equivalente)": 1}, "internet": {}, "financia": {"Gratuidad": 92, "Padres": 43, "Beca": 10, "Crédito": 5, "Otros": 2, "Me autofinancio": 1}, "niv_mat": {"Reprobado": 108, "Aprobado": 47}, "niv_len": {"Reprobado": 92, "Aprobado": 66}, "hijos": {"No": 152, "Si": 1}, "trabaja": {"No": 123, "Part time": 21, "Jornada completa": 4, "Independiente": 3, "Media jornada": 2}}, "grupo_pace_todo": {"n": 214, "pgen": 80.8, "nem": 865.6, "mat": 564.9, "len": 658.0, "cie": 505.0, "edad": 18.0, "ingreso_fam": {"$288K–$864K": 105, "Menor a $288K": 60, "$864K–$1.4M": 20, "Más de $1.4M": 3}, "edu_padre": {"Ed. Media Completa": 60, "No lo sé": 41, "Ed. Técnica Completa": 20, "Ed. Universitaria Completa": 16, "Ed. Básica completa": 15, "Ed. Media Incompleta": 15, "Ed. Básica Incompleta": 14, "Ed. Universitaria Incompleta": 6, "Postgrado (master, doctor o equivalente)": 1}, "internet": {}, "financia": {"Gratuidad": 117, "Padres": 51, "Beca": 11, "Crédito": 5, "Otros": 3, "Me autofinancio": 1}, "niv_mat": {"Reprobado": 139, "Aprobado": 56}, "niv_len": {"Reprobado": 126, "Aprobado": 73}, "hijos": {"No": 187, "Si": 1}, "trabaja": {"No": 151, "Part time": 22, "Jornada completa": 6, "Independiente": 4, "Media jornada": 3, "Freelance": 2}}}, "2024": {"total": 2460, "irp": 2180, "iep": 278, "pgen": 66.9, "programas": {"PACE": {"total": 238, "uso_cupo": 47, "entro_irp": 174, "otro": 17}, "Propedéutico": {"total": 87, "uso_cupo": 0, "entro_irp": 64, "otro": 23}, "Enlace Escolar": {"total": 39, "uso_cupo": 3, "entro_irp": 31, "otro": 5}, "Incluye UCN": {"total": 165, "uso_cupo": 0, "entro_irp": 153, "otro": 12}, "Etnia Declarada": {"total": 453, "uso_cupo": 0, "entro_irp": 398, "otro": 55}}, "tipo_counts": {"IRP-Lista de seleccion": 2136, "IEP-Excepcion Lista espera Rep": 104, "IEP-Ingreso Cupo PACE": 46, "IRP-Lista de espera": 30, "IEP-Ingreso Traslado de Univ": 26, "IEP-Ingreso Cupo Especial BEA": 20, "IEP-Propedeutico": 17, "IEP-Mas Mujeres Cientificas": 14, "IEP-Habilitacion Pedagogia 50P": 10, "IEP-Ingr. Tecnico Profesional": 10, "IRP-Repostulacion": 9, "IEP-Ingreso Deportista": 6, "IEP-Ingreso Profesional": 5, "IEP-Habilitacion Pedagogia PAP": 5, "IRP-Oficio de Verificacion": 5, "IEP-Ceduc": 4, "IEP-Enlace Escolar": 3, "IEP-Ingreso Equidad de Genero": 3, "IEP-Ingreso Pueblos Originario": 2, "IEP-Definicion Vocacional": 2, "Repostulacion PACE": 1, "IEP-Habilitacion Pedagogia 30%": 1, "Ingreso Especial Discapacidad": 1}, "facultad": {"Fac. de Ing. y Cs. Geologicas": 607, "Escuela de Ingenieria": 303, "Facultad de Economia y Adminis": 209, "Escuela de Cs. Empresariales": 199, "Facultad de Medicina": 197, "Facultad de Educacion": 164, "Facultad de Ciencias": 132, "Facultad de Ciencias Juridicas": 121, "Esc. de Derecho Antofagasta": 118, "Facultad de Ciencias del Mar": 94, "Escuela de Psicologia": 80, "Escuela de Arquitectura": 79, "Fac. de Cs. de Ing. y Construc": 60, "Escuela de Educación Coquimbo": 51, "Escuela de Periodismo": 37, "Dpto. Teología Coquimbo": 9}, "sede": {"Antofagasta": 1486, "Coquimbo": 974}, "ingreso": {"$288K–$864K": 932, "Menor a $288K": 392, "$864K–$1.4M": 343, "Más de $1.4M": 309}, "sexo": {"Masculino": 1259, "Femenino": 1201}, "grupo_irp_puro": {"n": 2006, "pgen": 62.8, "nem": 785.2, "mat": 668.5, "len": 665.7, "cie": 534.4, "edad": 18.8, "ingreso_fam": {"$288K–$864K": 756, "$864K–$1.4M": 314, "Menor a $288K": 297, "Más de $1.4M": 293}, "edu_padre": {"Educación Media Completa": 470, "Educación Universitaria Completa": 367, "Educación Técnica Completa": 313, "No lo sé": 170, "Educación Universitaria Incompleta": 102, "Educación Media Incompleta": 85, "Postgrado": 56, "Educación Básica Completa": 38, "Educación Técnica Incompleta": 32, "Educación Básica Incompleta": 27}, "internet": {"Regular / a veces": 887, "Excelente / Siempre": 666, "Mala o inestable / Pocas veces": 102, "Sin internet / Nunca": 5}, "financia": {"Padres": 807, "Gratuidad": 578, "Otros": 104, "Crédito": 79, "Beca": 70, "Me autofinancio": 22}, "niv_mat": {"Reprobado": 951, "Aprobado": 884}, "niv_len": {"Reprobado": 947, "Aprobado": 860}, "hijos": {"No": 1648, "Sí": 12}, "trabaja": {"No": 1365, "Part time": 132, "Independiente": 63, "Jornada Completa": 51, "Media jornada": 32, "Freelance": 17}}, "grupo_pace_cupo": {"n": 47, "pgen": 85.1, "nem": 837.3, "mat": 535.2, "len": 553.1, "cie": 430.8, "edad": 18.0, "ingreso_fam": {"$288K–$864K": 16, "Menor a $288K": 13, "$864K–$1.4M": 3, "Más de $1.4M": 1}, "edu_padre": {"Educación Media Completa": 11, "No lo sé": 8, "Educación Universitaria Completa": 5, "Educación Media Incompleta": 4, "Educación Básica Completa": 4, "Educación Básica Incompleta": 1}, "internet": {"Regular / a veces": 22, "Excelente / Siempre": 6, "Mala o inestable / Pocas veces": 4, "Sin internet / Nunca": 1}, "financia": {"Gratuidad": 21, "Padres": 9, "Otros": 2, "Beca": 1}, "niv_mat": {"Reprobado": 33, "Aprobado": 10}, "niv_len": {"Reprobado": 28, "Aprobado": 15}, "hijos": {"No": 33}, "trabaja": {"No": 27, "Part time": 4, "Independiente": 1, "Freelance": 1}}, "grupo_pace_irp": {"n": 174, "pgen": 85.1, "nem": 884.4, "mat": 604.5, "len": 631.4, "cie": 499.5, "edad": 18.1, "ingreso_fam": {"$288K–$864K": 87, "Menor a $288K": 49, "$864K–$1.4M": 12, "Más de $1.4M": 4}, "edu_padre": {"Educación Media Completa": 66, "Educación Técnica Completa": 21, "No lo sé": 21, "Educación Básica Completa": 13, "Educación Universitaria Completa": 10, "Educación Media Incompleta": 10, "Educación Básica Incompleta": 5, "Educación Universitaria Incompleta": 3, "Educación Técnica Incompleta": 2, "Postgrado": 1}, "internet": {"Regular / a veces": 91, "Excelente / Siempre": 47, "Mala o inestable / Pocas veces": 12, "Sin internet / Nunca": 2}, "financia": {"Gratuidad": 102, "Padres": 37, "Beca": 6, "Otros": 4, "Me autofinancio": 2, "Crédito": 1}, "niv_mat": {"Reprobado": 112, "Aprobado": 52}, "niv_len": {"Reprobado": 90, "Aprobado": 76}, "hijos": {"No": 151, "Sí": 1}, "trabaja": {"No": 130, "Part time": 8, "Media jornada": 6, "Independiente": 5, "Jornada Completa": 2, "Freelance": 1}}, "grupo_pace_todo": {"n": 238, "pgen": 85.3, "nem": 871.7, "mat": 591.0, "len": 613.5, "cie": 484.5, "edad": 18.1, "ingreso_fam": {"$288K–$864K": 109, "Menor a $288K": 66, "$864K–$1.4M": 15, "Más de $1.4M": 5}, "edu_padre": {"Educación Media Completa": 80, "No lo sé": 31, "Educación Técnica Completa": 22, "Educación Básica Completa": 18, "Educación Universitaria Completa": 15, "Educación Media Incompleta": 15, "Educación Básica Incompleta": 6, "Educación Universitaria Incompleta": 5, "Educación Técnica Incompleta": 2, "Postgrado": 1}, "internet": {"Regular / a veces": 120, "Excelente / Siempre": 56, "Mala o inestable / Pocas veces": 16, "Sin internet / Nunca": 3}, "financia": {"Gratuidad": 131, "Padres": 46, "Beca": 8, "Otros": 7, "Me autofinancio": 2, "Crédito": 1}, "niv_mat": {"Reprobado": 154, "Aprobado": 64}, "niv_len": {"Reprobado": 124, "Aprobado": 98}, "hijos": {"No": 194, "Sí": 1}, "trabaja": {"No": 163, "Part time": 13, "Independiente": 8, "Media jornada": 7, "Freelance": 2, "Jornada Completa": 2}}}, "2025": {"total": 2073, "irp": 1941, "iep": 130, "pgen": 66.2, "programas": {"PACE": {"total": 319, "uso_cupo": 70, "entro_irp": 240, "otro": 9}, "Propedéutico": {"total": 77, "uso_cupo": 0, "entro_irp": 55, "otro": 22}, "Enlace Escolar": {"total": 50, "uso_cupo": 0, "entro_irp": 47, "otro": 3}, "Incluye UCN": {"total": 72, "uso_cupo": 0, "entro_irp": 68, "otro": 4}, "Etnia Declarada": {"total": 387, "uso_cupo": 0, "entro_irp": 372, "otro": 15}}, "tipo_counts": {"IRP-Lista de seleccion": 1935, "IEP-Ingreso Cupo PACE": 73, "IEP-Mas Mujeres Cientificas": 23, "IEP-Prog. Esp. Acceso PEA": 16, "IEP-Ingreso Cupo Especial BEA": 13, "IRP-Oficio de Verificacion": 3, "IEP-Habilitacion Pedagogia PAP": 2, "IEP-Ingreso Deportista": 2, "IRP-Lista de espera": 2, "IEP-Ingreso Pueblos Originario": 1, "IRP-Repostulacion": 1, "Ingreso Especial Discapacidad": 1, "Repostulacion PACE": 1}, "facultad": {"Fac. de Ing. y Cs. Geologicas": 737, "Escuela de Ingenieria": 301, "Escuela de Cs. Empresariales": 201, "Facultad de Medicina": 159, "Facultad de Ciencias Juridicas": 130, "Esc. de Derecho Antofagasta": 112, "Facultad de Ciencias del Mar": 108, "Fac. de Cs. de Ing. y Construc": 84, "Escuela de Arquitectura": 79, "Escuela de Psicologia": 76, "Escuela de Educación Coquimbo": 49, "Escuela de Periodismo": 32, "Dpto. Teología Coquimbo": 5}, "sede": {"Antofagasta": 1120, "Coquimbo": 953}, "ingreso": {"$288K–$864K": 767, "Menor a $288K": 336, "Más de $1.4M": 292, "$864K–$1.4M": 269}, "sexo": {"Masculino": 1139, "Femenino": 934}, "grupo_irp_puro": {"n": 1701, "pgen": 61.6, "nem": 791.8, "mat": 710.7, "len": 661.2, "cie": 558.7, "edad": 18.7, "ingreso_fam": {"$288K–$864K": 609, "Más de $1.4M": 282, "Menor a $288K": 250, "$864K–$1.4M": 240}, "edu_padre": {"Educación Media Completa": 375, "Educación Universitaria Completa": 344, "Educación Técnica Completa": 215, "No lo sé": 148, "Educación Media Incompleta": 72, "Educación Universitaria Incompleta": 71, "Postgrado": 69, "Educación Básica Completa": 32, "Educación Básica Incompleta": 28, "Educación Técnica Incompleta": 27}, "internet": {"Regular / a veces": 715, "Excelente / Siempre": 599, "Mala o inestable / Pocas veces": 66, "Sin internet / Nunca": 1}, "financia": {"Padres": 642, "Gratuidad": 555, "Otros": 69, "Crédito": 53, "Beca": 41, "Me autofinancio": 21}, "niv_mat": {"Reprobado": 770, "Aprobado": 731}, "niv_len": {"Aprobado": 824, "Reprobado": 634}, "hijos": {"No": 1374, "Sí": 7}, "trabaja": {"No": 1157, "Part time": 100, "Independiente": 54, "Jornada Completa": 36, "Freelance": 17, "Media jornada": 17}}, "grupo_pace_cupo": {"n": 74, "pgen": 90.5, "nem": 824.8, "mat": 545.0, "len": 544.2, "cie": 435.0, "edad": 18.0, "ingreso_fam": {"$288K–$864K": 39, "Menor a $288K": 12, "$864K–$1.4M": 2, "Más de $1.4M": 1}, "edu_padre": {"Educación Media Completa": 26, "No lo sé": 8, "Educación Técnica Completa": 6, "Educación Media Incompleta": 6, "Educación Básica Incompleta": 4, "Educación Básica Completa": 2, "Educación Universitaria Completa": 2}, "internet": {"Regular / a veces": 33, "Excelente / Siempre": 12, "Mala o inestable / Pocas veces": 8, "Sin internet / Nunca": 1}, "financia": {"Gratuidad": 35, "Padres": 13, "Beca": 3, "Otros": 2, "Me autofinancio": 1}, "niv_mat": {"Reprobado": 52, "Aprobado": 15}, "niv_len": {"Reprobado": 41, "Aprobado": 25}, "hijos": {"No": 54}, "trabaja": {"No": 41, "Part time": 7, "Jornada Completa": 2, "Media jornada": 2, "Independiente": 2}}, "grupo_pace_irp": {"n": 240, "pgen": 86.7, "nem": 866.8, "mat": 650.4, "len": 620.2, "cie": 510.6, "edad": 18.2, "ingreso_fam": {"$288K–$864K": 94, "Menor a $288K": 68, "$864K–$1.4M": 22, "Más de $1.4M": 5}, "edu_padre": {"Educación Media Completa": 79, "No lo sé": 33, "Educación Técnica Completa": 19, "Educación Universitaria Completa": 15, "Educación Básica Incompleta": 13, "Educación Media Incompleta": 10, "Educación Básica Completa": 8, "Educación Universitaria Incompleta": 8, "Educación Técnica Incompleta": 4}, "internet": {"Regular / a veces": 119, "Excelente / Siempre": 52, "Mala o inestable / Pocas veces": 14, "Sin internet / Nunca": 4}, "financia": {"Gratuidad": 128, "Padres": 41, "Otros": 8, "Beca": 6, "Crédito": 6}, "niv_mat": {"Reprobado": 143, "Aprobado": 73}, "niv_len": {"Reprobado": 118, "Aprobado": 99}, "hijos": {"No": 187, "Sí": 2}, "trabaja": {"No": 153, "Part time": 19, "Jornada Completa": 9, "Independiente": 4, "Media jornada": 3, "Freelance": 1}}, "grupo_pace_todo": {"n": 319, "pgen": 87.5, "nem": 857.6, "mat": 624.1, "len": 601.5, "cie": 489.9, "edad": 18.1, "ingreso_fam": {"$288K–$864K": 138, "Menor a $288K": 81, "$864K–$1.4M": 25, "Más de $1.4M": 6}, "edu_padre": {"Educación Media Completa": 108, "No lo sé": 41, "Educación Técnica Completa": 26, "Educación Media Incompleta": 18, "Educación Básica Incompleta": 17, "Educación Universitaria Completa": 17, "Educación Básica Completa": 11, "Educación Universitaria Incompleta": 8, "Educación Técnica Incompleta": 4}, "internet": {"Regular / a veces": 156, "Excelente / Siempre": 67, "Mala o inestable / Pocas veces": 22, "Sin internet / Nunca": 5}, "financia": {"Gratuidad": 169, "Padres": 54, "Beca": 10, "Otros": 10, "Crédito": 6, "Me autofinancio": 1}, "niv_mat": {"Reprobado": 198, "Aprobado": 93}, "niv_len": {"Reprobado": 164, "Aprobado": 127}, "hijos": {"No": 248, "Sí": 2}, "trabaja": {"No": 201, "Part time": 26, "Jornada Completa": 11, "Independiente": 6, "Media jornada": 5, "Freelance": 1}}}, "2026": {"total": 2709, "irp": 2384, "iep": 304, "pgen": 68.3, "programas": {"PACE": {"total": 404, "uso_cupo": 128, "entro_irp": 250, "otro": 26}, "Propedéutico": {"total": 120, "uso_cupo": 0, "entro_irp": 77, "otro": 43}, "Enlace Escolar": {"total": 46, "uso_cupo": 0, "entro_irp": 38, "otro": 8}, "Incluye UCN": {"total": 73, "uso_cupo": 0, "entro_irp": 63, "otro": 10}, "Etnia Declarada": {"total": 518, "uso_cupo": 0, "entro_irp": 439, "otro": 79}}, "tipo_counts": {"IRP-Lista de seleccion": 2362, "IEP-Ingreso Cupo PACE": 127, "IEP-Mas Mujeres Cientificas": 39, "IEP-Prog. Esp. Acceso PEA": 28, "IEP-Ingreso Traslado de Univ": 25, "IEP-Ingreso Cupo Especial BEA": 16, "IEP-Ingreso Pueblos Originario": 16, "IRP-Lista de espera": 13, "IEP-Lista Espera Pace": 10, "Prosecucion de Estudios": 10, "Repostulacion PACE": 8, "IEP-Lista Espera Mujeres cient": 8, "IRP-Repostulacion": 8, "IEP-Ingreso Equidad de Genero": 7, "IEP-Ingr. Tecnico Profesional": 7, "IEP-Habilitacion Pedagogia PAP": 6, "IEP-Ceduc": 5, "IEP-Ingreso Deportista": 3, "Ingreso Especial Discapacidad": 3, "IEP-Lista Espera BEA": 2, "IEP-Trayectoria Pastoral": 2, "IEP-Excepcion Lista espera Rep": 2, "IRP-Oficio de Verificacion": 1, "IEP-Propedeutico": 1}, "facultad": {"Fac. de Ing. y Cs. Geologicas": 799, "Escuela de Ingenieria": 293, "Facultad de Medicina": 204, "Facultad de Economia y Adminis": 190, "Escuela de Cs. Empresariales": 188, "Facultad de Ciencias": 164, "Facultad de Educacion": 150, "Facultad de Ciencias del Mar": 127, "Facultad de Ciencias Juridicas": 123, "Esc. de Derecho Antofagasta": 109, "Escuela de Psicologia": 98, "Fac. de Cs. de Ing. y Construc": 89, "Escuela de Arquitectura": 82, "Escuela de Educación Coquimbo": 58, "Escuela de Periodismo": 32, "Dpto. Teología Coquimbo": 3}, "sede": {"Antofagasta": 1713, "Coquimbo": 996}, "ingreso": {"$288K–$864K": 956, "$864K–$1.4M": 398, "Más de $1.4M": 352, "Menor a $288K": 285}, "sexo": {"Masculino": 1378, "Femenino": 1331}, "grupo_irp_puro": {"n": 2134, "pgen": 64.8, "nem": 786.6, "mat": 709.0, "len": 674.3, "cie": 550.3, "edad": 18.7, "ingreso_fam": {"$288K–$864K": 728, "$864K–$1.4M": 339, "Más de $1.4M": 329, "Menor a $288K": 197}, "edu_padre": {"Educación Media Completa": 466, "Educación Universitaria Completa": 356, "Educación Técnica Completa": 267, "No lo sé": 191, "Educación Universitaria Incompleta": 84, "Postgrado": 63, "Educación Media Incompleta": 60, "Educación Técnica Incompleta": 50, "Educación Básica Completa": 37, "Educación Básica Incompleta": 19}, "internet": {"Regular / a veces": 831, "Excelente / Siempre": 694, "Mala o inestable / Pocas veces": 66, "Sin internet / Nunca": 2}, "financia": {"Padres": 745, "Gratuidad": 582, "Otros": 92, "Crédito": 70, "Beca": 65, "Me autofinancio": 39}, "niv_mat": {"Reprobado": 963, "Aprobado": 769}, "niv_len": {"Aprobado": 744, "Reprobado": 629}, "hijos": {"No": 1579, "Sí": 14}, "trabaja": {"No": 1325, "Part time": 114, "Independiente": 57, "Jornada Completa": 44, "Freelance": 28, "Media jornada": 25}}, "grupo_pace_cupo": {"n": 135, "pgen": 86.7, "nem": 849.9, "mat": 560.6, "len": 567.1, "cie": 439.4, "edad": 18.2, "ingreso_fam": {"$288K–$864K": 55, "Menor a $288K": 23, "$864K–$1.4M": 7, "Más de $1.4M": 2}, "edu_padre": {"Educación Media Completa": 26, "No lo sé": 21, "Educación Básica Completa": 11, "Educación Media Incompleta": 9, "Educación Técnica Completa": 6, "Educación Básica Incompleta": 4, "Educación Universitaria Completa": 4, "Postgrado": 3, "Educación Universitaria Incompleta": 2, "Educación Técnica Incompleta": 1}, "internet": {"Regular / a veces": 54, "Excelente / Siempre": 25, "Mala o inestable / Pocas veces": 8}, "financia": {"Gratuidad": 63, "Padres": 16, "Otros": 5, "Beca": 3}, "niv_mat": {"Reprobado": 73, "Aprobado": 30}, "niv_len": {"Reprobado": 61, "Aprobado": 29}, "hijos": {"No": 87}, "trabaja": {"No": 80, "Jornada Completa": 4, "Part time": 2, "Independiente": 1}}, "grupo_pace_irp": {"n": 250, "pgen": 82.4, "nem": 879.7, "mat": 656.9, "len": 635.4, "cie": 492.0, "edad": 18.0, "ingreso_fam": {"$288K–$864K": 114, "Menor a $288K": 49, "$864K–$1.4M": 24, "Más de $1.4M": 7}, "edu_padre": {"Educación Media Completa": 77, "No lo sé": 38, "Educación Técnica Completa": 20, "Educación Universitaria Completa": 15, "Educación Media Incompleta": 12, "Educación Universitaria Incompleta": 10, "Educación Básica Incompleta": 9, "Educación Básica Completa": 6, "Educación Técnica Incompleta": 6, "Postgrado": 1}, "internet": {"Regular / a veces": 129, "Excelente / Siempre": 44, "Mala o inestable / Pocas veces": 20, "Sin internet / Nunca": 1}, "financia": {"Gratuidad": 133, "Padres": 43, "Beca": 9, "Otros": 5, "Crédito": 3, "Me autofinancio": 1}, "niv_mat": {"Reprobado": 155, "Aprobado": 63}, "niv_len": {"Aprobado": 89, "Reprobado": 86}, "hijos": {"No": 194}, "trabaja": {"No": 168, "Part time": 10, "Jornada Completa": 5, "Media jornada": 4, "Independiente": 4, "Freelance": 3}}, "grupo_pace_todo": {"n": 404, "pgen": 83.9, "nem": 867.8, "mat": 624.1, "len": 613.2, "cie": 473.8, "edad": 18.1, "ingreso_fam": {"$288K–$864K": 183, "Menor a $288K": 76, "$864K–$1.4M": 34, "Más de $1.4M": 9}, "edu_padre": {"Educación Media Completa": 114, "No lo sé": 61, "Educación Técnica Completa": 28, "Educación Media Incompleta": 21, "Educación Universitaria Completa": 20, "Educación Básica Completa": 18, "Educación Básica Incompleta": 15, "Educación Universitaria Incompleta": 14, "Educación Técnica Incompleta": 7, "Postgrado": 4}, "internet": {"Regular / a veces": 195, "Excelente / Siempre": 76, "Mala o inestable / Pocas veces": 30, "Sin internet / Nunca": 1}, "financia": {"Gratuidad": 210, "Padres": 65, "Beca": 13, "Otros": 10, "Crédito": 3, "Me autofinancio": 1}, "niv_mat": {"Reprobado": 246, "Aprobado": 98}, "niv_len": {"Reprobado": 156, "Aprobado": 126}, "hijos": {"No": 302}, "trabaja": {"No": 267, "Part time": 13, "Jornada Completa": 9, "Independiente": 6, "Media jornada": 4, "Freelance": 3}}}};
+const YEARS = ['2021','2022','2023','2024','2025','2026'];
+const COLS3 = ['#1a3a6e','#4a9fd4','#e07848'];
+const COLS_FAC = ['#1a3a6e','#2a7ab8','#4a9fd4','#6db8e0','#8ecce8'];
+const COLS_MULTI = ['#1a3a6e','#2a7ab8','#4a9fd4','#6db8e0','#8ecce8','#a8d9ee','#c0e4f3','#d5eef8','#e8f5fc','#bde0f5'];
+const PROGS = ['PACE','Mujeres Cientificas','PEA','Propedéutico','Enlace Escolar','Incluye UCN','Etnia Declarada'];
+let charts={}, activeProg='PACE';
+
+function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function yr(){return document.getElementById('sel-year').value;}
+function sede(){return document.getElementById('sel-sede').value;}
+function ratio(d){const s=sede();return s==='Todas'?1:(d.sede[s]||0)/(d.total||1);}
+
+function makeBars(elId, entries, maxVal, colors, lblW){
+  const el=document.getElementById(elId); if(!el)return;
+  const totalReal = entries.reduce((a,[,v])=>a+(v||0), 0) || 1;
+  el.innerHTML=entries.map(([lbl,val],i)=>{
+    const barW = Math.max(Math.round((val||0)/maxVal*100), 1);
+    const pctReal = Math.round((val||0)/totalReal*100);
+    const sh=lbl.length>26?lbl.slice(0,25)+'…':lbl;
+    return `<div class="brow">
+      <div class="blbl" style="width:${lblW||130}px" title="${lbl}">${sh}</div>
+      <div class="btrk"><div class="bfil" style="width:${barW}%;background:${colors[i]||'#8ecce8'}">
+        ${barW>14?`<span class="bnum">${pctReal}%</span>`:''}
+      </div></div>
+      <span class="bn">${typeof val==='number'&&val<10?val.toFixed(1):Math.round(val).toLocaleString('es-CL')}</span>
+    </div>`}).join('');
+}
+
+function pctOfTotal(obj){
+  const t=Object.values(obj).reduce((a,b)=>a+b,0);
+  if(!t) return {};
+  const r={};
+  for(const [k,v] of Object.entries(obj)) r[k]=Math.round(v/t*100);
+  return r;
+}
+
+function renderResumen(){
+  const d=DATA[yr()], r=ratio(d), t=Math.round(d.total*r);
+  const irp=Math.round(d.irp*r), iep=Math.round(d.iep*r);
+  const pace=d.programas['PACE'];
+  document.getElementById('k-total').textContent=t.toLocaleString('es-CL');
+  document.getElementById('k-yr').textContent='Año '+yr();
+  document.getElementById('k-irp').textContent=irp.toLocaleString('es-CL');
+  document.getElementById('k-irp-p').textContent=Math.round(irp/t*100)+'% del total';
+  document.getElementById('k-iep').textContent=iep.toLocaleString('es-CL');
+  document.getElementById('k-iep-p').textContent=Math.round(iep/t*100)+'% del total';
+  document.getElementById('k-pgen').textContent=d.pgen+'%';
+  if(pace){
+    document.getElementById('k-pace').textContent=pace.total;
+    document.getElementById('k-pace-sub').textContent=`${pace.uso_cupo} cupo · ${pace.entro_irp} por IRP`;
+  }
+
+  const te=Object.entries(d.tipo_counts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,Math.round(v*r)]);
+  makeBars('tipo-bars',te,te[0][1],COLS_MULTI,145);
+
+  const io=[['Menor a $288K','$288K–$864K','$864K–$1.4M','Más de $1.4M'].map(k=>[k,Math.round((d.ingreso[k]||0)*r)])].flat();
+  const im=Math.max(...io.map(e=>e[1])||[1]);
+  makeBars('ing-bars',io,im,['#1a3a6e','#2a7ab8','#6db8e0','#a8d9ee'],100);
+
+  dc('sede');
+  const sk=Object.keys(d.sede), sv=Object.values(d.sede);
+  charts['sede']=new Chart(document.getElementById('c-sede'),{type:'doughnut',
+    data:{labels:sk,datasets:[{data:sv,backgroundColor:['#1a3a6e','#4a9fd4'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}});
+
+  dc('sexo');
+  const sexk=Object.keys(d.sexo), sexv=Object.values(d.sexo);
+  charts['sexo']=new Chart(document.getElementById('c-sexo'),{type:'doughnut',
+    data:{labels:sexk,datasets:[{data:sexv,backgroundColor:['#1a3a6e','#D4537E'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:6}}}}});
+
+  // Financiamiento
+  const fin=d.grupo_pace_todo?.financia||d.grupo_irp_puro?.financia||{};
+  const fe=Object.entries(fin).sort((a,b)=>b[1]-a[1]);
+  const fm=fe[0]?.[1]||1;
+  makeBars('financia-bars',fe,fm,COLS_MULTI,90);
+
+  // Scores resumen 3 grupos
+  dc('scores-resumen');
+  const gi=d.grupo_irp_puro, gpc=d.grupo_pace_cupo, gpi=d.grupo_pace_irp;
+  const labels3=['NEM','MAT','LEN','CIE'];
+  charts['scores-resumen']=new Chart(document.getElementById('c-scores-resumen'),{type:'bar',
+    data:{labels:labels3,datasets:[
+      {label:'IRP sin PACE',data:gi?[gi.nem,gi.mat,gi.len,gi.cie||0]:[0,0,0,0],backgroundColor:'#1a3a6e'},
+      {label:'PACE vía IRP', data:gpi?[gpi.nem,gpi.mat,gpi.len,gpi.cie||0]:[0,0,0,0],backgroundColor:'#4a9fd4'},
+      {label:'PACE con cupo',data:gpc?[gpc.nem,gpc.mat,gpc.len,gpc.cie||0]:[0,0,0,0],backgroundColor:'#e07848'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:6}}},
+      scales:{y:{beginAtZero:false,min:300,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});
+}
+
+function renderComparacion(){
+  const d=DATA[yr()];
+  const gi=d.grupo_irp_puro, gpi=d.grupo_pace_irp, gpc=d.grupo_pace_cupo;
+  if(!gi||!gpc) return;
+
+  const grupos=[
+    {lbl:'IRP sin PACE', g:gi,  color:'#1a3a6e'},
+    {lbl:'PACE vía IRP', g:gpi||{}, color:'#4a9fd4'},
+    {lbl:'PACE con cupo',g:gpc, color:'#e07848'},
+  ];
+
+  // Scores
+  dc('comp-scores');
+  charts['comp-scores']=new Chart(document.getElementById('c-comp-scores'),{type:'bar',
+    data:{labels:['NEM','MAT','LEN','CIE'],datasets:grupos.map(({lbl,g,color})=>({
+      label:lbl,data:g.nem?[g.nem,g.mat,g.len,g.cie||0]:[0,0,0,0],backgroundColor:color}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:5}}},
+      scales:{y:{beginAtZero:false,min:300,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});
+
+  // Ingreso familiar % stacked
+  dc('comp-ingreso');
+  const ingKeys=['Menor a $288K','$288K–$864K','$864K–$1.4M','Más de $1.4M'];
+  const ingColors=['#1a3a6e','#4a9fd4','#8ecce8','#c0e4f3'];
+  charts['comp-ingreso']=new Chart(document.getElementById('c-comp-ingreso'),{type:'bar',
+    data:{labels:grupos.map(g=>g.lbl),
+      datasets:ingKeys.map((k,i)=>({label:k,
+        data:grupos.map(({g})=>{const t=Object.values(g.ingreso_fam||{}).reduce((a,b)=>a+b,0)||1;return t?Math.round((g.ingreso_fam?.[k]||0)/t*100):0}),
+        backgroundColor:ingColors[i]}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:4}}},
+      scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{font:{size:9},callback:v=>v+'%'}}}}});
+
+  // Financiamiento %
+  dc('comp-financia');
+  const finKeys=['Padres','Gratuidad','Beca','Crédito','Me autofinancio','Otros'];
+  const finColors=['#1a3a6e','#2a7ab8','#4a9fd4','#6db8e0','#8ecce8','#c0e4f3'];
+  charts['comp-financia']=new Chart(document.getElementById('c-comp-financia'),{type:'bar',
+    data:{labels:grupos.map(g=>g.lbl),
+      datasets:finKeys.map((k,i)=>({label:k,
+        data:grupos.map(({g})=>{const t=Object.values(g.financia||{}).reduce((a,b)=>a+b,0)||1;return t?Math.round((g.financia?.[k]||0)/t*100):0}),
+        backgroundColor:finColors[i]}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:4}}},
+      scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{font:{size:9},callback:v=>v+'%'}}}}});
+
+  // Nivelación MAT
+  dc('comp-nivmat');
+  charts['comp-nivmat']=new Chart(document.getElementById('c-comp-nivmat'),{type:'bar',
+    data:{labels:grupos.map(g=>g.lbl),
+      datasets:[
+        {label:'Aprobado', data:grupos.map(({g})=>{const t=(g.niv_mat?.Aprobado||0)+(g.niv_mat?.Reprobado||0)||1;return Math.round((g.niv_mat?.Aprobado||0)/t*100)}),backgroundColor:'#3b6d11'},
+        {label:'Reprobado',data:grupos.map(({g})=>{const t=(g.niv_mat?.Aprobado||0)+(g.niv_mat?.Reprobado||0)||1;return Math.round((g.niv_mat?.Reprobado||0)/t*100)}),backgroundColor:'#e07848'},
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:5}}},
+      scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{font:{size:9},callback:v=>v+'%'}}}}});
+
+  // Nivelación LEN
+  dc('comp-nivlen');
+  charts['comp-nivlen']=new Chart(document.getElementById('c-comp-nivlen'),{type:'bar',
+    data:{labels:grupos.map(g=>g.lbl),
+      datasets:[
+        {label:'Aprobado', data:grupos.map(({g})=>{const t=(g.niv_len?.Aprobado||0)+(g.niv_len?.Reprobado||0)||1;return Math.round((g.niv_len?.Aprobado||0)/t*100)}),backgroundColor:'#185FA5'},
+        {label:'Reprobado',data:grupos.map(({g})=>{const t=(g.niv_len?.Aprobado||0)+(g.niv_len?.Reprobado||0)||1;return Math.round((g.niv_len?.Reprobado||0)/t*100)}),backgroundColor:'#D4537E'},
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:5}}},
+      scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{font:{size:9},callback:v=>v+'%'}}}}});
+
+  // Internet %
+  dc('comp-internet');
+  const intKeys=['Excelente / Siempre','Regular / a veces','Mala o inestable / Pocas veces','Sin internet / Nunca'];
+  const intColors=['#1a3a6e','#4a9fd4','#e07848','#D85A30'];
+  const intShort=['Excelente','Regular','Mala','Sin internet'];
+  charts['comp-internet']=new Chart(document.getElementById('c-comp-internet'),{type:'bar',
+    data:{labels:grupos.map(g=>g.lbl),
+      datasets:intKeys.map((k,i)=>({label:intShort[i],
+        data:grupos.map(({g})=>{const t=Object.values(g.internet||{}).reduce((a,b)=>a+b,0)||1;return t?Math.round((g.internet?.[k]||0)/t*100):0}),
+        backgroundColor:intColors[i]}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:4}}},
+      scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{font:{size:9},callback:v=>v+'%'}}}}});
+
+  // Tabla comparativa
+  const rows=[
+    ['N° estudiantes',       g=>g.n?.toLocaleString('es-CL')||'—'],
+    ['% 1ª generación',      g=>g.pgen!=null?g.pgen+'%':'—'],
+    ['Edad promedio',         g=>g.edad||'—'],
+    ['NEM promedio',          g=>g.nem||'—'],
+    ['MAT promedio',          g=>g.mat||'—'],
+    ['LEN promedio',          g=>g.len||'—'],
+    ['CIE promedio',          g=>g.cie||'—'],
+    ['% Gratuidad',           g=>{const t=Object.values(g.financia||{}).reduce((a,b)=>a+b,0)||1;return t?Math.round((g.financia?.Gratuidad||0)/t*100)+'%':'—'}],
+    ['% Aprueba niv. MAT',    g=>{const t=(g.niv_mat?.Aprobado||0)+(g.niv_mat?.Reprobado||0);return t?Math.round((g.niv_mat?.Aprobado||0)/t*100)+'%':'—'}],
+    ['% Aprueba niv. LEN',    g=>{const t=(g.niv_len?.Aprobado||0)+(g.niv_len?.Reprobado||0);return t?Math.round((g.niv_len?.Aprobado||0)/t*100)+'%':'—'}],
+    ['% Internet excelente',  g=>{const t=Object.values(g.internet||{}).reduce((a,b)=>a+b,0)||1;return t?Math.round((g.internet?.['Excelente / Siempre']||0)/t*100)+'%':'—'}],
+  ];
+  const el=document.getElementById('tabla-comp');
+  el.innerHTML=`<div class="comp-header">
+    <div></div>
+    ${grupos.map(({lbl,color})=>`<div class="comp-col" style="background:${color};color:#fff">${lbl}</div>`).join('')}
+  </div>`+rows.map(([lbl,fn])=>`<div class="comp-row">
+    <div class="comp-lbl">${lbl}</div>
+    ${grupos.map(({g})=>`<div class="comp-val">${fn(g)}</div>`).join('')}
+  </div>`).join('');
+
+  // Educación padre grouped bar
+  dc('comp-edu');
+  const eduKeys=['Ed. Básica / Sin datos','Ed. Media','Ed. Técnica','Ed. Universitaria','Postgrado'];
+  const eduColores=['#c0e4f3','#6db8e0','#4a9fd4','#2a7ab8','#1a3a6e'];
+  function catEdu(obj){
+    const t=Object.values(obj||{}).reduce((a,b)=>a+b,0)||1;
+    const sum=k=>Object.entries(obj||{}).filter(([kk])=>kk.toLowerCase().includes(k.toLowerCase())).reduce((a,[,v])=>a+v,0);
+    return [
+      Math.round((sum('básica')+sum('Sin información')+sum('sin'))/t*100),
+      Math.round(sum('media')/t*100),
+      Math.round(sum('técnica')/t*100),
+      Math.round((sum('universitaria')+sum('Universitaria'))/t*100),
+      Math.round((sum('postgrado')+sum('Postgrado')+sum('master'))/t*100),
+    ];
+  }
+  charts['comp-edu']=new Chart(document.getElementById('c-comp-edu'),{type:'bar',
+    data:{labels:grupos.map(g=>g.lbl),
+      datasets:eduKeys.map((k,i)=>({label:k,data:grupos.map(({g})=>catEdu(g.edu_padre)[i]),backgroundColor:eduColores[i]}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:4}}},
+      scales:{x:{stacked:true},y:{stacked:true,max:100,ticks:{font:{size:9},callback:v=>v+'%'}}}}});
+}
+
+function renderProgramas(){
+  const yr2=yr(), d=DATA[yr2];
+  const progs=PROGS.filter(p=>d.programas[p]);
+  const tabsEl=document.getElementById('prog-tabs');
+  tabsEl.innerHTML=progs.map(p=>`<div class="ptab${p===activeProg?' active':''}" onclick="setActiveProg('${p}',this)">${p.replace('Mujeres Cientificas','Mujeres Cient.').replace('Etnia Declarada','Etnia Dec.')}</div>`).join('');
+  if(!progs.includes(activeProg)) activeProg=progs[0];
+  updateProg(yr2);
+}
+
+function setActiveProg(p,el){
+  activeProg=p;
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  updateProg(yr());
+}
+
+function updateProg(yr2){
+  const p=DATA[yr2].programas[activeProg]; if(!p) return;
+  // Split bars
+  const el=document.getElementById('split-bars-prog');
+  el.innerHTML=YEARS.map(y=>{
+    const pd=DATA[y].programas[activeProg]; if(!pd||!pd.total) return '';
+    const pc=Math.round(pd.uso_cupo/pd.total*100), pi=Math.round(pd.entro_irp/pd.total*100), po=100-pc-pi;
+    return `<div class="split-yr"><div class="split-lbl">${y} — total: ${pd.total}</div>
+    <div class="split-track">
+      <div class="s-cupo" style="width:${pc}%">${pc>8?pc+'%':''}</div>
+      <div class="s-irp"  style="width:${pi}%">${pi>8?pi+'%':''}</div>
+      <div class="s-otro" style="width:${po}%">${po>8?po+'%':''}</div>
+    </div></div>`;
+  }).join('');
+  // Trend
+  dc('prog-trend');
+  charts['prog-trend']=new Chart(document.getElementById('c-prog-trend'),{type:'line',
+    data:{labels:YEARS,datasets:[
+      {label:'Total en programa',data:YEARS.map(y=>DATA[y].programas[activeProg]?.total||0),borderColor:'#1a3a6e',backgroundColor:'#e6f0fb',fill:true,tension:.3,pointRadius:4},
+      {label:'Usó cupo',         data:YEARS.map(y=>DATA[y].programas[activeProg]?.uso_cupo||0),borderColor:'#e07848',fill:false,tension:.3,pointRadius:3},
+      {label:'Entró por IRP',    data:YEARS.map(y=>DATA[y].programas[activeProg]?.entro_irp||0),borderColor:'#4a9fd4',fill:false,tension:.3,pointRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:5}}},
+      scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});
+  // Stats
+  document.getElementById('prog-stats-detail').innerHTML=[
+    ['Total en programa',`${p.total}`],
+    ['Usaron cupo',`${p.uso_cupo} (${Math.round(p.uso_cupo/p.total*100)}%)`],
+    ['Entraron por IRP',`${p.entro_irp} (${Math.round(p.entro_irp/p.total*100)}%)`],
+    ['Otro tipo',`${p.otro}`],
+  ].map(([l,v])=>`<div class="stat-row"><span class="sl">${l}</span><span class="sv">${v}</span></div>`).join('');
+}
+
+function renderFacultades(){
+  const d=DATA[yr()], r=ratio(d);
+  const fe=Object.entries(d.facultad).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,Math.round(v*r)]);
+  makeBars('fac-bars-all',fe,fe[0][1],COLS_MULTI,190);
+  dc('fac-trend');
+  const top5=Object.entries(DATA['2026'].facultad).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k])=>k);
+  const shorten=s=>s.replace('Fac. de Ing. y Cs. Geologicas','Ing.Geol.').replace('Escuela de Ingenieria','Esc.Ing.').replace('Facultad de Medicina','Medicina').replace('Facultad de Economia y Adminis','Economía').replace('Escuela de Cs. Empresariales','Empresariales');
+  charts['fac-trend']=new Chart(document.getElementById('c-fac-trend'),{type:'line',
+    data:{labels:YEARS,datasets:top5.map((f,i)=>({label:shorten(f),data:YEARS.map(y=>DATA[y].facultad[f]||0),borderColor:COLS_FAC[i],fill:false,tension:.3,pointRadius:3}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9},padding:5}}},
+      scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});
+}
+
+function renderTendencia(){
+  const mk=(id,datasets,opts={})=>{dc(id);charts[id]=new Chart(document.getElementById('c-t-'+id),{...opts,data:{labels:YEARS,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:6}}},scales:{y:{beginAtZero:false,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}},...(opts.scales||{})}}});};
+  mk('total',[{label:'Total',data:YEARS.map(y=>DATA[y].total),borderColor:'#1a3a6e',backgroundColor:'#e6f0fb',fill:true,tension:.3,pointRadius:5}],{type:'line'});
+  mk('tipo',[{label:'IRP',data:YEARS.map(y=>DATA[y].irp),backgroundColor:'#1a3a6e'},{label:'IEP',data:YEARS.map(y=>DATA[y].iep),backgroundColor:'#e07848'}],{type:'bar',scales:{y:{beginAtZero:true}}});
+  mk('pace',[
+    {label:'Total PACE',   data:YEARS.map(y=>DATA[y].programas['PACE']?.total||0),borderColor:'#1a3a6e',backgroundColor:'#e6f0fb',fill:true,tension:.3,pointRadius:4},
+    {label:'Usó cupo',     data:YEARS.map(y=>DATA[y].programas['PACE']?.uso_cupo||0),borderColor:'#e07848',fill:false,tension:.3,pointRadius:4},
+    {label:'Entró por IRP',data:YEARS.map(y=>DATA[y].programas['PACE']?.entro_irp||0),borderColor:'#4a9fd4',fill:false,tension:.3,pointRadius:4},
+  ],{type:'line',scales:{y:{beginAtZero:true}}});
+  const pgenYrs=YEARS.filter(y=>DATA[y].pgen<100);
+  dc('pgen');charts['pgen']=new Chart(document.getElementById('c-t-pgen'),{type:'line',
+    data:{labels:pgenYrs,datasets:[{label:'% 1ª generación',data:pgenYrs.map(y=>DATA[y].pgen),borderColor:'#3b6d11',backgroundColor:'#eaf3de',fill:true,tension:.3,pointRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{min:55,max:75,ticks:{font:{size:9},callback:v=>v+'%'}},x:{ticks:{font:{size:9}}}}}});
+}
+
+function renderAll(){renderResumen();renderComparacion();renderProgramas();renderFacultades();renderTendencia();}
+function showTab(n,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+n).classList.add('active');
+  el.classList.add('active');
+}
+renderAll();
+</script>
+</body>
+</html>
